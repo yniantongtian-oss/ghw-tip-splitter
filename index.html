@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Split a restaurant bill and tip across the table. Preset or custom tip percents, rounding, dark mode, and English or Chinese."
+    />
+    <title>Tip Splitter</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c2411c'/%3E%3Cpath fill='white' d='M8 7h16v17l-2.3-1.4L19.4 24 17 22.6 14.6 24l-2.3-1.4L10 24l-2-1.4V7z'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem("tip-splitter-theme");
+          if (theme !== "light" && theme !== "dark") {
+            theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          }
+          document.documentElement.setAttribute("data-theme", theme);
+          if (localStorage.getItem("tip-splitter-lang") === "zh") {
+            document.documentElement.lang = "zh-CN";
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <main class="app" translate="no">
+      <header class="top">
+        <div>
+          <p class="eyebrow" data-i18n="eyebrow">Dinner check</p>
+          <h1 data-i18n="title">Tip Splitter</h1>
+        </div>
+        <div class="toggles">
+          <div class="lang" id="lang-toggle" role="group" aria-label="Language">
+            <button type="button" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" data-lang="zh" lang="zh-CN" aria-pressed="false">中文</button>
+          </div>
+          <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false" aria-label="Switch to dark mode">
+            <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path fill="currentColor" d="M21 14.5A8.5 8.5 0 1 1 9.5 3a7 7 0 0 0 11.5 11.5z" />
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <circle cx="12" cy="12" r="4" fill="currentColor" />
+              <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M12 2.5v2.2M12 19.3v2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.8 19.2l1.6-1.6M17.6 6.4l1.6-1.6" />
+              </g>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="result" aria-live="polite">
+        <p id="per-person-label" class="result-label" data-i18n="perPerson">Per person</p>
+        <p id="per-person" class="result-amount is-range" aria-labelledby="per-person-label">$33.98–$33.99</p>
+        <p id="share-note" class="result-note">1 person pays $33.99, 2 people pay $33.98</p>
+        <dl class="breakdown">
+          <div>
+            <dt data-i18n="billWord">Bill</dt>
+            <dd id="bill-amount">$86.40</dd>
+          </div>
+          <div>
+            <dt data-i18n="tip">Tip</dt>
+            <dd id="tip-amount">$15.55</dd>
+          </div>
+          <div>
+            <dt data-i18n="total">Total</dt>
+            <dd id="total-amount">$101.95</dd>
+          </div>
+        </dl>
+      </section>
+
+      <form id="split-form" novalidate>
+        <div class="field-block">
+          <label for="bill" data-i18n="bill">Bill amount</label>
+          <div class="field" id="bill-field">
+            <span class="affix" aria-hidden="true">$</span>
+            <input id="bill" name="bill" inputmode="decimal" autocomplete="off" spellcheck="false" value="86.40" aria-describedby="bill-error" />
+          </div>
+          <p class="error" id="bill-error" aria-live="polite"></p>
+        </div>
+
+        <fieldset>
+          <legend data-i18n="tipPercent">Tip</legend>
+          <div class="presets" id="presets">
+            <button type="button" data-tip="10" aria-pressed="false">10%</button>
+            <button type="button" data-tip="15" aria-pressed="false">15%</button>
+            <button type="button" data-tip="18" aria-pressed="true">18%</button>
+            <button type="button" data-tip="20" aria-pressed="false">20%</button>
+          </div>
+          <div class="field-block custom-block">
+            <label for="custom-tip" data-i18n="custom">Custom</label>
+            <div class="field" id="custom-field">
+              <input id="custom-tip" name="custom-tip" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="e.g. 12.5" aria-describedby="tip-error" />
+              <span class="affix" aria-hidden="true">%</span>
+            </div>
+          </div>
+          <p class="error" id="tip-error" aria-live="polite"></p>
+        </fieldset>
+
+        <div class="field-block">
+          <label for="people" data-i18n="people">Number of people</label>
+          <div class="stepper" id="people-stepper">
+            <button type="button" id="people-dec" aria-label="Fewer people">−</button>
+            <input id="people" name="people" inputmode="numeric" autocomplete="off" value="3" aria-describedby="people-error" />
+            <button type="button" id="people-inc" aria-label="More people">+</button>
+          </div>
+          <p class="error" id="people-error" aria-live="polite"></p>
+        </div>
+
+        <label class="switch">
+          <input type="checkbox" id="round" name="round" />
+          <span class="switch-ui" aria-hidden="true"></span>
+          <span data-i18n="round">Round each share to the nearest dollar</span>
+        </label>
+      </form>
+
+      <p class="footer" data-i18n="footer">MLH Global Hack Week · Challenge 1</p>
+    </main>
+    <noscript>Tip Splitter needs JavaScript to calculate the split.</noscript>
+    <script src="calc.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
